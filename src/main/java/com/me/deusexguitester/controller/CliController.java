@@ -15,13 +15,6 @@ public class CliController {
 
     public void listen(){
 
-        try (Scanner in = new Scanner(System.in)) {
-            while (true) {
-                String input = in.next().trim().toLowerCase();
-                System.out.println(input);
-            }
-        }
-
     }
 
     public static CliController getCli(){

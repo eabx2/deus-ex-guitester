@@ -7,7 +7,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="401.0" prefWidth="498.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.me.deusexguitester.controller.MainSceneController">
+<Pane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="401.0" prefWidth="498.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.me.deusexguitester.controller.MainSceneController">
    <children>
       <ListView fx:id="testsListView" layoutX="13.0" layoutY="94.0" prefHeight="260.0" prefWidth="474.0" />
       <Button fx:id="recordButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#onRecordButtonClick" prefHeight="29.0" prefWidth="69.0" text="Record" />

@@ -4,13 +4,17 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.me.deusexguitester.model.Command;
+import com.me.deusexguitester.model.Test;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.function.Consumer;
 
 
 /**
@@ -28,22 +32,28 @@ public class FileManager {
         workspace.mkdir();
     }
 
-    public void createTest(ArrayList<Command> commands){
+    public void saveTest(Test test){
 
-        String testDirName = "test_" + new SimpleDateFormat("yyyyMMddhhmmss").format(new Date().getTime());
-
-        File testDir = new File(workspace.getPath() + "\\" + testDirName);
-
-        // create test dir
+        // create testDir
+        File testDir = new File(workspace.getPath() + "\\" + test.name);
         testDir.mkdir();
+
+        // create testDir\screenshots\
+        File screenshotsDir = new File(testDir.getPath() + "\\" + "screenshots");
+        screenshotsDir.mkdir();
 
         try {
             ObjectMapper mapper = new ObjectMapper();
 
+            // write commands
             File commandsFile = new File(testDir.getPath() + "\\" + "commands.json");
             commandsFile.createNewFile();
+            mapper.writerWithDefaultPrettyPrinter().writeValue(commandsFile,test.commands);
 
-            mapper.writerWithDefaultPrettyPrinter().writeValue(commandsFile,commands);
+            // write screenshots
+            for (int i = 0; i < test.screenshots.size(); i++) {
+                ImageIO.write(test.screenshots.get(i),"bmp",new File(screenshotsDir + "\\" + "ss" + i + ".bmp"));
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -51,11 +61,11 @@ public class FileManager {
 
     }
 
-    public File[] getTests(){
+    public File[] getTestFiles(){
         return workspace.listFiles();
     }
 
-    public ArrayList<Command> getTestCommandsByName(String testName){
+    public ArrayList<Command> getCommandsByTestName(String testName){
 
         ObjectMapper mapper = new ObjectMapper();
         ArrayList<Command> commands = null;
@@ -70,6 +80,16 @@ public class FileManager {
         }
 
         return commands;
+    }
+
+    public BufferedImage getScreenshotByTestName(String testName, String screenshotName){
+        File imageFile = new File(workspace.getPath() + "\\" + testName + "\\" + "screenshots" + "\\" + screenshotName + ".bmp");
+        try {
+            return ImageIO.read(imageFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static FileManager getFileManager(){

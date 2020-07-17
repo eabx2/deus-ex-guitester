@@ -18,7 +18,7 @@ public class Command {
     public int rawCode;
 
     // verify screen
-    public String screenshot;
+    public String screenshotName;
 
     // verify value
     public String value;
