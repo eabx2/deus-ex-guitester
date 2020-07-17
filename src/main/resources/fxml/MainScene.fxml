@@ -7,13 +7,12 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="401.0" prefWidth="498.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.me.deusexguitester.controller.MainSceneController">
    <children>
       <ListView fx:id="testsListView" layoutX="13.0" layoutY="94.0" prefHeight="260.0" prefWidth="474.0" />
       <Button fx:id="recordButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#onRecordButtonClick" prefHeight="29.0" prefWidth="69.0" text="Record" />
       <Button fx:id="playbackButton" layoutX="402.0" layoutY="13.0" mnemonicParsing="false" onAction="#onPlaybackButtonClick" prefHeight="36.0" prefWidth="80.0" text="Playback" />
-      <CheckBox fx:id="selectAllCheckBox" layoutX="402.0" layoutY="60.0" mnemonicParsing="false" text="Select All" />
+      <CheckBox fx:id="selectAllCheckBox" layoutX="402.0" layoutY="60.0" mnemonicParsing="false" onAction="#onSelectAllCheckBoxClick" text="Select All" />
       <Button fx:id="pauseButton" layoutX="14.0" layoutY="54.0" mnemonicParsing="false" onAction="#onPauseButtonClick" prefHeight="29.0" prefWidth="69.0" text="Pause" />
       <Button fx:id="stopButton" layoutX="90.0" layoutY="14.0" mnemonicParsing="false" onAction="#onStopButtonClick" prefHeight="29.0" prefWidth="69.0" text="Stop" />
       <Separator layoutX="172.0" layoutY="16.0" orientation="VERTICAL" prefHeight="67.0" prefWidth="4.0" />
@@ -25,6 +24,6 @@
       </HBox>
       <Button fx:id="abortButton" layoutX="90.0" layoutY="54.0" mnemonicParsing="false" onAction="#onAbortButtonClick" prefHeight="29.0" prefWidth="69.0" text="Abort" />
       <Separator layoutX="389.0" layoutY="16.0" orientation="VERTICAL" prefHeight="67.0" prefWidth="4.0" />
-      <Button fx:id="refreshButton" layoutX="13.0" layoutY="365.0" mnemonicParsing="false" onAction="#refreshButtonClick" text="Refresh" />
+      <Button fx:id="refreshButton" layoutX="13.0" layoutY="365.0" mnemonicParsing="false" onAction="#onRefreshButtonClick" text="Refresh" />
    </children>
 </Pane>

@@ -1,11 +1,11 @@
 package com.me.deusexguitester.fileManager;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.me.deusexguitester.model.Command;
 
 import java.io.File;
-import java.io.File.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -16,13 +16,13 @@ import java.util.Date;
 /**
  * Created by ersinn on 13.07.2020.
  */
-public class fileManager {
+public class FileManager {
 
-    private static fileManager fileManager;
+    private static FileManager fileManager;
 
     File workspace = new File("./workspace");
 
-    private fileManager(){
+    private FileManager(){
 
         // create workspace
         workspace.mkdir();
@@ -40,14 +40,10 @@ public class fileManager {
         try {
             ObjectMapper mapper = new ObjectMapper();
 
-            String jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(commands);
-
             File commandsFile = new File(testDir.getPath() + "\\" + "commands.json");
             commandsFile.createNewFile();
 
-            FileWriter writer = new FileWriter(commandsFile);
-            writer.write(jsonString);
-            writer.close();
+            mapper.writerWithDefaultPrettyPrinter().writeValue(commandsFile,commands);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,10 +55,27 @@ public class fileManager {
         return workspace.listFiles();
     }
 
-    public static fileManager getFileManager(){
+    public ArrayList<Command> getTestCommandsByName(String testName){
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayList<Command> commands = null;
+
+        // tell mapper to read values into ArrayList<Command>
+        JavaType type = mapper.getTypeFactory().constructCollectionType(ArrayList.class,Command.class);
+
+        try {
+            commands = mapper.readValue(new File(workspace.getPath() + "\\" + testName + "\\" + "commands.json"),type);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return commands;
+    }
+
+    public static FileManager getFileManager(){
 
         if(fileManager == null)
-            fileManager = new fileManager();
+            fileManager = new FileManager();
 
         return fileManager;
     }

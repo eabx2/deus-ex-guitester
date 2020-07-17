@@ -15,12 +15,15 @@ public class Command {
     public String y;
 
     // key actions;
-    public String keyCode;
+    public int rawCode;
 
     // verify screen
     public String screenshot;
 
     // verify value
     public String value;
+
+    // verify common properties
+    public int verifyNumber;
 
 }
