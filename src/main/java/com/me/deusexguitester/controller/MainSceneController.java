@@ -2,15 +2,19 @@ package com.me.deusexguitester.controller;
 
 import static com.me.deusexguitester.fileManager.FileManager.getFileManager;
 
+import com.me.deusexguitester.fileManager.FileManager;
 import com.me.deusexguitester.listener.KeyActivityListener;
 import com.me.deusexguitester.listener.MouseActivityListener;
 import com.me.deusexguitester.model.Command;
 import com.me.deusexguitester.model.Test;
+import com.me.deusexguitester.model.TestInfo;
+import com.me.deusexguitester.model.TestInfoProperty;
 import com.me.deusexguitester.tester.Tester;
 import com.sun.jna.platform.DesktopWindow;
 import com.sun.jna.platform.WindowUtils;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +23,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
 import javafx.stage.*;
 import org.jnativehook.GlobalScreen;
@@ -37,6 +42,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 /**
  * Created by ersinn on 13.07.2020.
@@ -89,7 +95,16 @@ public class MainSceneController implements Initializable{
     // Content Components
 
     @FXML
-    ListView testsListView;
+    TableView testsTableView;
+
+    @FXML
+    TableColumn testNameTableColumn;
+
+    @FXML
+    TableColumn windowNameTableColumn;
+
+    @FXML
+    TableColumn descriptionNameTableColumn;
 
     @FXML
     CheckBox selectAllCheckBox;
@@ -349,39 +364,33 @@ public class MainSceneController implements Initializable{
     public void onPlaybackButtonClick(ActionEvent event){
         playbacking.setValue(true);
 
-        testsListView.getSelectionModel().getSelectedItems().forEach(testName -> {
-            System.out.println("Testing " + testName + "\n");
-            Tester.getTester().perform(Test.loadTest(((String) testName)));
-            System.out.println("Testing Ended " + testName + "\n");
-        });
+        testsTableView.getSelectionModel().getSelectedItems().forEach((o -> {
+            System.out.println("Testing " + ((TestInfoProperty) o).getName() + "\n");
+            Tester.getTester().perform(Test.loadTest(((TestInfoProperty) o).getName()));
+            System.out.println("Testing Ended " + ((TestInfoProperty) o).getName() + "\n");
+        }));
 
         playbacking.setValue(false);
     }
 
     public void onSelectAllCheckBoxClick(ActionEvent event) {
         if(selectAllCheckBox.isSelected()){
-            testsListView.getSelectionModel().selectAll();
+            testsTableView.getSelectionModel().selectAll();
         }
         else {
-            testsListView.getSelectionModel().clearSelection();
+            testsTableView.getSelectionModel().clearSelection();
         }
 
     }
 
     public void onRefreshButtonClick(ActionEvent event) {
 
-        File[] tests = getFileManager().getTestFiles();
+        ObservableList<TestInfoProperty> testInfoPropertyList = FileManager.getFileManager().getTestInfoPropertyList();
 
-        // reset list-view
-        testsListView.getItems().clear();
+        testsTableView.setItems(testInfoPropertyList);
 
         // reset selectAllCheckBox
         selectAllCheckBox.setSelected(false);
-
-        // update
-        for (int i = 0; i < tests.length; i++) {
-            testsListView.getItems().add(tests[i].getName());
-        }
 
     }
 
@@ -428,16 +437,23 @@ public class MainSceneController implements Initializable{
         playbackButton.disableProperty().bind(playbacking.or(recording));
 
         selectAllCheckBox.disableProperty().bind(playbacking.or(recording));
-        testsListView.disableProperty().bind(playbacking.or(recording));
-        testsListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        testsTableView.disableProperty().bind(playbacking.or(recording));
+
+        testsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
 
         // bind list-view and checkbox
-        testsListView.getSelectionModel().getSelectedItems().addListener((ListChangeListener) c -> {
-            if(c.getList().size() == testsListView.getItems().size()) selectAllCheckBox.setSelected(true);
+        testsTableView.getSelectionModel().getSelectedItems().addListener((ListChangeListener) c -> {
+            if(c.getList().size() == testsTableView.getItems().size()) selectAllCheckBox.setSelected(true);
             else selectAllCheckBox.setSelected(false);
         });
 
         refreshButton.disableProperty().bind(recording.or(playbacking));
+
+        // set factory of columns
+        testNameTableColumn.setCellValueFactory(new PropertyValueFactory<TestInfo,String>("name"));
+        windowNameTableColumn.setCellValueFactory(new PropertyValueFactory<TestInfo,String>("testedWindow"));
+        descriptionNameTableColumn.setCellValueFactory(new PropertyValueFactory<TestInfo,String>("description"));
 
         // firstly fill list-view
         onRefreshButtonClick(new ActionEvent());

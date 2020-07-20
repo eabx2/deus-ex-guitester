@@ -5,6 +5,10 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.me.deusexguitester.model.Command;
 import com.me.deusexguitester.model.Test;
+import com.me.deusexguitester.model.TestInfo;
+import com.me.deusexguitester.model.TestInfoProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -31,10 +35,27 @@ public class FileManager {
         workspace.mkdir();
     }
 
-    public File[] getTestFiles(){
-        return workspace.listFiles();
-    }
+    public ObservableList<TestInfoProperty> getTestInfoPropertyList(){
 
+        ObservableList<TestInfoProperty> testInfoPropertyList = FXCollections.observableArrayList();
+
+        File[] files = workspace.listFiles();
+
+        ObjectMapper mapper = new ObjectMapper();
+        TestInfo testInfo;
+
+        for (int i = 0; i < files.length; i++) {
+            try {
+                testInfo = mapper.readValue(new File(workspace.getPath() + "\\" + files[i].getName() + "\\" + "testInfo.json"),TestInfo.class);
+                testInfoPropertyList.add(new TestInfoProperty(testInfo));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return testInfoPropertyList;
+
+    }
 
     public static FileManager getFileManager(){
 

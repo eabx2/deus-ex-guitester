@@ -34,7 +34,6 @@ public class Main extends Application{
         }
 
         // Logs OFF
-
         Logger logger = Logger.getLogger((GlobalScreen.class.getPackage().getName()));
         logger.setLevel(Level.ALL);
         logger.setUseParentHandlers(false);
@@ -59,4 +58,5 @@ public class Main extends Application{
         cliThread.setDaemon(true);
         cliThread.start();
     }
+
 }
