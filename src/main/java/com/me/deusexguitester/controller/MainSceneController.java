@@ -7,16 +7,20 @@ import com.me.deusexguitester.listener.MouseActivityListener;
 import com.me.deusexguitester.model.Command;
 import com.me.deusexguitester.model.Test;
 import com.me.deusexguitester.tester.Tester;
+import com.sun.jna.platform.DesktopWindow;
+import com.sun.jna.platform.WindowUtils;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.Pane;
+import javafx.stage.*;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
@@ -39,7 +43,7 @@ import java.util.ResourceBundle;
  */
 public class MainSceneController implements Initializable{
 
-    private Test test;
+    public static Test newTest;
     private int numberOfVerifyPoints = 0;
     private int numberOfScreenShots = 0;
 
@@ -68,13 +72,19 @@ public class MainSceneController implements Initializable{
     @FXML
     Button abortButton;
 
-    // Verify Buttons
+    // Recording Action Buttons
 
     @FXML
     Button verifyScreenButton;
 
     @FXML
     Button verifyValueButton;
+
+    @FXML
+    Button waitButton;
+
+    @FXML
+    Button verifyPortionButton;
 
     // Content Components
 
@@ -91,12 +101,15 @@ public class MainSceneController implements Initializable{
 
     public void onRecordButtonClick(ActionEvent event){
 
+        // get new test
+        displayNewTestScene();
+
+        // if test name is not specified then do not start recording
+        if(newTest == null) return;
+
         recording.setValue(true);
 
-        // give a name to the test
-        test.rollName();
-
-        System.out.println("Recording " + test.name);
+        System.out.println("Recording " + newTest.testInfo.name);
 
         // hook the screen
         try {
@@ -119,18 +132,13 @@ public class MainSceneController implements Initializable{
 
         }
 
-        // remove clicks on this button
-        if(test.commands.size()>=2){
-            test.commands.remove(test.commands.size()-1);
-            test.commands.remove(test.commands.size()-1);
-        }
+        // save test
+        newTest.saveTest();
 
-        getFileManager().saveTest(test);
+        System.out.println("Saved " + newTest.testInfo.name + "\n");
 
-        // reset test
-        test.clear();
-
-        System.out.println("Saved " + test.name + "\n");
+        // reset newTest
+        newTest = null;
 
         // reset verify points and screenshot number
         numberOfVerifyPoints = 0;
@@ -155,17 +163,11 @@ public class MainSceneController implements Initializable{
                 e.printStackTrace();
             }
 
-            // remove clicks on this button
-            if(test.commands.size()>=2){
-                test.commands.remove(test.commands.size()-1);
-                test.commands.remove(test.commands.size()-1);
-            }
-
         }
         else if(pauseButton.getText().equals("Resume")){
             pauseButton.setText("Pause");
 
-            System.out.println("\tResuming " + test.name);
+            System.out.println("\tResuming " + newTest.testInfo.name);
 
             // hook the screen
             try {
@@ -190,10 +192,13 @@ public class MainSceneController implements Initializable{
 
         }
 
-        // reset commands and screenshots
-        test.clear();
+        // delete test dir
+        newTest.deleteDir();
 
-        System.out.println("Aborted " + test.name + "\n");
+        System.out.println("Aborted " + newTest.testInfo.name + "\n");
+
+        // reset newTest
+        newTest = null;
 
         // reset verify points and screenshot number
         numberOfVerifyPoints = 0;
@@ -203,14 +208,14 @@ public class MainSceneController implements Initializable{
 
     public void onVerifyScreenButtonClick(ActionEvent event) {
 
-        // remove clicks on this button
-        if(test.commands.size()>=2){
-            test.commands.remove(test.commands.size()-1);
-            test.commands.remove(test.commands.size()-1);
+        Rectangle rect = null;
+        for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
+            if(MainSceneController.newTest.testInfo.testedWindow.equals(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)))){
+                rect = desktopWindow.getLocAndSize();
+                break;
+            }
         }
-
-        Rectangle entireFirstScreen = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-        BufferedImage screenshot = Tester.getRobot().createScreenCapture(entireFirstScreen);
+        BufferedImage screenshot = Tester.getRobot().createScreenCapture(rect);
 
         // add verifyValue command
         Command command = new Command();
@@ -218,20 +223,14 @@ public class MainSceneController implements Initializable{
         command.screenshotName = "ss" + numberOfScreenShots++;
         command.verifyNumber = numberOfVerifyPoints++;
 
-        test.commands.add(command);
-        test.screenshots.add(screenshot);
+        newTest.commands.add(command);
+        newTest.addScreenshot(screenshot,command.screenshotName);
 
         System.out.println("\tVerify Screen is DONE");
 
     }
 
     public void onVerifyValueButtonClick(ActionEvent event) {
-
-        // remove clicks on this button
-        if(test.commands.size()>=2){
-            test.commands.remove(test.commands.size()-1);
-            test.commands.remove(test.commands.size()-1);
-        }
 
         // unhook the screen
         try {
@@ -241,7 +240,7 @@ public class MainSceneController implements Initializable{
         }
 
         // repeat the last press-release action pair
-        Command temp[] = new Command[]{test.commands.get(test.commands.size()-2),test.commands.get(test.commands.size()-1)};
+        Command temp[] = new Command[]{newTest.commands.get(newTest.commands.size()-2),newTest.commands.get(newTest.commands.size()-1)};
 
         // copy where the mouse is - on verify button -
         double x = MouseInfo.getPointerInfo().getLocation().getX();
@@ -278,7 +277,7 @@ public class MainSceneController implements Initializable{
         command.value = copiedText;
         command.verifyNumber = numberOfVerifyPoints++;
 
-        test.commands.add(command);
+        newTest.commands.add(command);
 
         System.out.println("\tVerify Value is DONE");
 
@@ -291,10 +290,70 @@ public class MainSceneController implements Initializable{
 
     }
 
+    public void onWaitButtonClick(ActionEvent event) {
+
+        Command command = new Command();
+        command.action = "wait";
+        command.milisec = System.currentTimeMillis() - MouseActivityListener.lastMousePressedTime;
+
+        newTest.commands.add(command);
+
+        System.out.println("Wait for " + command.milisec);
+
+    }
+
+    public void onVerifyPortionButtonClick(ActionEvent event) {
+
+        // first press
+        int x1 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-4).x);
+        int y1 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-4).y);
+
+        // second press
+        int x2 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-2).x);
+        int y2 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-2).y);
+
+        // remove last four commands - press,release,press,release -
+        for (int i = 0; i < 4; i++) {
+            newTest.commands.remove(newTest.commands.size()-1);
+        }
+
+        // create rect with two points
+        Rectangle rect = new Rectangle(new Point(x1,y1));
+        rect.add(new Point(x2,y2));
+
+        // move rect relative into the app window
+        Rectangle windowRect = Tester.getRectangleOfWindowByTitle(newTest.testInfo.testedWindow);
+        rect.setLocation(rect.x + windowRect.x, rect.y + windowRect.y);
+
+        // get ss
+        BufferedImage screenshot = Tester.getRobot().createScreenCapture(rect);
+
+        // add verifyPortion command
+        Command command = new Command();
+        command.action = "verifyPortion";
+        command.screenshotName = "ss" + numberOfScreenShots++;
+        command.x1 = x1;
+        command.y1 = y1;
+        command.x2 = x2;
+        command.y2 = y2;
+        command.verifyNumber = numberOfVerifyPoints++;
+
+        // add
+        newTest.commands.add(command);
+        newTest.addScreenshot(screenshot,command.screenshotName);
+
+        System.out.println("\tVerify Portion is DONE");
+
+    }
+
     public void onPlaybackButtonClick(ActionEvent event){
         playbacking.setValue(true);
 
-        testsListView.getSelectionModel().getSelectedItems().forEach(testName -> Tester.getTester().perform((String) testName));
+        testsListView.getSelectionModel().getSelectedItems().forEach(testName -> {
+            System.out.println("Testing " + testName + "\n");
+            Tester.getTester().perform(Test.loadTest(((String) testName)));
+            System.out.println("Testing Ended " + testName + "\n");
+        });
 
         playbacking.setValue(false);
     }
@@ -323,9 +382,34 @@ public class MainSceneController implements Initializable{
         for (int i = 0; i < tests.length; i++) {
             testsListView.getItems().add(tests[i].getName());
         }
+
     }
 
-    // First Function to be run
+    // External functions
+
+    public void displayNewTestScene(){
+        Stage window = new Stage();
+
+        window.initModality(Modality.APPLICATION_MODAL);
+        window.setTitle("New Test");
+
+        Parent root = null;
+        try {
+            root = FXMLLoader.load(getClass().getResource("/fxml/NewTestScene.fxml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        window.setX(recordButton.getScene().getWindow().getX() + recordButton.getScene().getWindow().getWidth() / 2);
+        window.setY(recordButton.getScene().getWindow().getY());
+
+        window.setScene(new Scene(root));
+        window.setResizable(false);
+        window.showAndWait();
+
+    }
+
+    // First function to be run
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -338,6 +422,8 @@ public class MainSceneController implements Initializable{
 
         verifyScreenButton.disableProperty().bind(recording.not().or(playbacking));
         verifyValueButton.disableProperty().bind(recording.not().or(playbacking));
+        waitButton.disableProperty().bind(recording.not().or(playbacking));
+        verifyPortionButton.disableProperty().bind(recording.not().or(playbacking));
 
         playbackButton.disableProperty().bind(playbacking.or(recording));
 
@@ -356,11 +442,9 @@ public class MainSceneController implements Initializable{
         // firstly fill list-view
         onRefreshButtonClick(new ActionEvent());
 
-        test = new Test();
-
         // Add listeners
-        GlobalScreen.addNativeMouseListener(new MouseActivityListener(test.commands));
-        GlobalScreen.addNativeKeyListener(new KeyActivityListener(test.commands));
+        GlobalScreen.addNativeMouseListener(new MouseActivityListener());
+        GlobalScreen.addNativeKeyListener(new KeyActivityListener());
 
         // let it refer to mainPane
         mainPaneInstance = mainPane;

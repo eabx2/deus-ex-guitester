@@ -1,6 +1,8 @@
 package com.me.deusexguitester.listener;
 
+import com.me.deusexguitester.controller.MainSceneController;
 import com.me.deusexguitester.model.Command;
+import com.me.deusexguitester.model.Test;
 import com.me.deusexguitester.tester.LocalKeyBoardCheck;
 import com.me.deusexguitester.tester.Tester;
 import org.jnativehook.keyboard.NativeKeyEvent;
@@ -12,12 +14,6 @@ import java.util.ArrayList;
  * Created by ersinn on 13.07.2020.
  */
 public class KeyActivityListener implements NativeKeyListener{
-
-    public ArrayList<Command> commands;
-
-    public KeyActivityListener(ArrayList<Command> commands){
-        this.commands = commands;
-    }
 
     // this function fix wrong-hooked rawCode for robot
     private int rawCodeMapper(int rawCode){
@@ -46,7 +42,7 @@ public class KeyActivityListener implements NativeKeyListener{
         command.action = "keyTyped";
         command.rawCode = e.getRawCode();
 
-        commands.add(command);
+        MainSceneController.newTest.commands.add(command);
     }
 
     @Override
@@ -60,7 +56,7 @@ public class KeyActivityListener implements NativeKeyListener{
         command.action = "keyPressed";
         command.rawCode = rawCodeMapper(e.getRawCode());
 
-        commands.add(command);
+        MainSceneController.newTest.commands.add(command);
     }
 
     @Override
@@ -74,6 +70,6 @@ public class KeyActivityListener implements NativeKeyListener{
         command.action = "keyReleased";
         command.rawCode = rawCodeMapper(e.getRawCode());
 
-        commands.add(command);
+        MainSceneController.newTest.commands.add(command);
     }
 }

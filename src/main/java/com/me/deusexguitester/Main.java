@@ -34,8 +34,9 @@ public class Main extends Application{
         }
 
         // Logs OFF
+
         Logger logger = Logger.getLogger((GlobalScreen.class.getPackage().getName()));
-        logger.setLevel(Level.OFF);
+        logger.setLevel(Level.ALL);
         logger.setUseParentHandlers(false);
 
         // launch
@@ -50,6 +51,7 @@ public class Main extends Application{
         primaryStage.setTitle("Deus Ex Gui-Tester");
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/MainScene.fxml"));
         primaryStage.setScene(new Scene(root));
+        primaryStage.setResizable(false);
         primaryStage.show();
 
         // Show CLI

@@ -23,7 +23,16 @@ public class Command {
     // verify value
     public String value;
 
+    // verify portion
+    public int x1;
+    public int y1;
+    public int x2;
+    public int y2;
+
     // verify common properties
     public int verifyNumber;
+
+    // wait value
+    public long milisec;
 
 }

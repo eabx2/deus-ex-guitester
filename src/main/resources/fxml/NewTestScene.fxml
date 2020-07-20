@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="271.0" prefWidth="179.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.me.deusexguitester.controller.NewTestSceneController">
+   <children>
+      <VBox layoutX="14.0" layoutY="14.0" prefHeight="214.0" prefWidth="150.0" spacing="10.0">
+         <children>
+            <ComboBox fx:id="windowComboBox" prefWidth="150.0" promptText="Test Window" />
+            <TextField fx:id="testNameTextField" prefHeight="25.0" prefWidth="164.0" promptText="Test Name" />
+            <TextArea fx:id="testDescriptionTextArea" prefHeight="143.0" prefWidth="170.0" promptText="Test Description" />
+         </children>
+      </VBox>
+      <Button fx:id="doneButton" layoutX="119.0" layoutY="236.0" mnemonicParsing="false" onAction="#doneButtonOnClick" prefHeight="25.0" prefWidth="45.0" text="Done" />
+   </children>
+</Pane>

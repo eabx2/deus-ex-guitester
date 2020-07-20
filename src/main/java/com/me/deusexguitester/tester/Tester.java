@@ -4,9 +4,9 @@ import com.me.deusexguitester.controller.MainSceneController;
 import com.me.deusexguitester.fileManager.FileManager;
 import com.me.deusexguitester.model.Command;
 import com.me.deusexguitester.model.Test;
+import com.sun.jna.platform.DesktopWindow;
+import com.sun.jna.platform.WindowUtils;
 import javafx.geometry.Bounds;
-
-import org.apache.commons.io.FileUtils;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
@@ -31,34 +31,40 @@ public class Tester {
 
     private Robot robot;
 
-    public boolean perform(String testName){
+    public boolean perform(Test test){
 
-        System.out.println("Testing Started " + testName);
+        Rectangle windowRect = getRectangleOfWindowByTitle(test.testInfo.testedWindow);
 
-        tester.robot.setAutoDelay(250);
+        // if specified window is not found
+        if(windowRect == null){
+            System.out.println("Specified window is not found");
+            return false;
+        }
 
-        ArrayList<Command> commands = FileManager.getFileManager().getCommandsByTestName(testName);
+        ArrayList<Command> commands = test.commands;
+
+        Rectangle finalWindowRect = windowRect;
 
         commands.forEach(command -> {
 
             switch (command.action){
                 case "mousePressed":
 
-                    robot.mouseMove(Integer.parseInt(command.x),Integer.parseInt(command.y));
+                    robot.mouseMove(finalWindowRect.x + Integer.parseInt(command.x),finalWindowRect.y + Integer.parseInt(command.y));
                     robot.mousePress(InputEvent.getMaskForButton(Integer.parseInt(command.buttonNumber)));
 
                     break;
 
                 case "mouseReleased":
 
-                    robot.mouseMove(Integer.parseInt(command.x),Integer.parseInt(command.y));
+                    robot.mouseMove(finalWindowRect.x + Integer.parseInt(command.x),finalWindowRect.y + Integer.parseInt(command.y));
                     robot.mouseRelease(InputEvent.getMaskForButton(Integer.parseInt(command.buttonNumber)));
 
                     break;
 
                 case "keyTyped":
 
-                    // only local chars saved as key-typed
+                    // only local chars saved as key-typed - whose place is not found in the keyboard -
                     if(LocalKeyBoardCheck.isTurkishKeyStroke(command.rawCode))
                         LocalKeyBoardCheck.handleTurkishKeyStroke(command.rawCode);
 
@@ -84,7 +90,6 @@ public class Tester {
                     robot.keyPress(KeyEvent.VK_C);
                     robot.keyRelease(KeyEvent.VK_CONTROL);
                     robot.keyRelease(KeyEvent.VK_C);
-                    robot.setAutoDelay(250);
 
                     // get the selected text from clipboard
                     String copiedText = getClipboardText();
@@ -113,11 +118,10 @@ public class Tester {
                     Tester.getRobot().setAutoDelay(2000);
 
                     // get the screenshot
-                    Rectangle entireFirstScreen = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-                    BufferedImage currentScreenshot = Tester.getRobot().createScreenCapture(entireFirstScreen);
+                    BufferedImage currentScreenshot = Tester.getRobot().createScreenCapture(finalWindowRect);
 
                     // load the image which wanted to be tested - saved as bmp -
-                    BufferedImage testScreenshot = FileManager.getFileManager().getScreenshotByTestName(testName,command.screenshotName);
+                    BufferedImage testScreenshot = test.getScreenshotByName(command.screenshotName);
 
                     // compare
                     if(compareImages(currentScreenshot,testScreenshot))
@@ -125,14 +129,45 @@ public class Tester {
                     else
                         System.out.println("\tVerify Point " + command.verifyNumber + " is FAILED");
 
-                    Tester.getRobot().setAutoDelay(250);
+                    break;
+
+                case "wait":
+
+                    try {
+                        Thread.sleep(command.milisec);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+
+                case "verifyPortion":
+
+                    // create rect with two points
+                    Rectangle portionRect = new Rectangle(new Point(command.x1,command.y1));
+                    portionRect.add(new Point(command.x2,command.y2));
+
+                    // move rect relative into the app window
+                    portionRect.setLocation(portionRect.x + finalWindowRect.x, portionRect.y + finalWindowRect.y);
+
+                    // get ss
+                    BufferedImage currentPortion = Tester.getRobot().createScreenCapture(portionRect);
+
+                    // load the image which wanted to be tested - saved as bmp -
+                    BufferedImage testPortion = test.getScreenshotByName(command.screenshotName);
+
+                    // compare
+                    if(compareImages(currentPortion,testPortion))
+                        System.out.println("\tVerify Point " + command.verifyNumber + " is PASSED");
+                    else
+                        System.out.println("\tVerify Point " + command.verifyNumber + " is FAILED");
 
                     break;
             }
 
-        });
+            tester.robot.setAutoDelay(1250);
 
-        System.out.println("Testing Ended " + testName + "\n");
+        });
 
         return true;
     }
@@ -162,6 +197,19 @@ public class Tester {
         }
 
         return true;
+    }
+
+    public static Rectangle getRectangleOfWindowByTitle(String title){
+        Rectangle rect = null;
+
+        for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
+            if(title.equals(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)))){
+                rect = desktopWindow.getLocAndSize();
+                break;
+            }
+        }
+
+        return rect;
     }
 
     private static String getClipboardText(){
