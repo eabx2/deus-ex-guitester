@@ -37,7 +37,7 @@ public class Tester {
 
         // if specified window is not found
         if(windowRect == null){
-            System.out.println("Specified window is not found");
+            System.out.println("\tSpecified window is not found");
             return false;
         }
 
@@ -115,7 +115,7 @@ public class Tester {
                     robot.mousePress(InputEvent.getMaskForButton(1));
                     Tester.getRobot().setAutoDelay(500);
                     robot.mouseRelease(InputEvent.getMaskForButton(1));
-                    Tester.getRobot().setAutoDelay(2000);
+                    //Tester.getRobot().setAutoDelay(2000);
 
                     // get the screenshot
                     BufferedImage currentScreenshot = Tester.getRobot().createScreenCapture(finalWindowRect);
@@ -143,6 +143,18 @@ public class Tester {
 
                 case "verifyPortion":
 
+                    // take the applet window coordinates
+                    bounds = MainSceneController.mainPaneInstance.getBoundsInLocal();
+                    screenBounds = MainSceneController.mainPaneInstance.localToScreen(bounds);
+                    x = (int) screenBounds.getMinX();
+                    y = (int) screenBounds.getMinY();
+
+                    // focus to applet
+                    robot.mouseMove(x,y);
+                    robot.mousePress(InputEvent.getMaskForButton(1));
+                    Tester.getRobot().setAutoDelay(500);
+                    robot.mouseRelease(InputEvent.getMaskForButton(1));
+
                     // create rect with two points
                     Rectangle portionRect = new Rectangle(new Point(command.x1,command.y1));
                     portionRect.add(new Point(command.x2,command.y2));
@@ -165,7 +177,7 @@ public class Tester {
                     break;
             }
 
-            tester.robot.setAutoDelay(1250);
+            tester.robot.setAutoDelay(500);
 
         });
 
@@ -188,9 +200,6 @@ public class Tester {
             for (int x = 0; x < width; x++) {
                 // Compare the pixels for equality.
                 if (imgA.getRGB(x, y) != imgB.getRGB(x, y)) {
-                    System.out.println(x + " " + y);
-                    System.out.println(imgA.getRGB(x, y));
-                    System.out.println(imgB.getRGB(x, y));
                     return false;
                 }
             }

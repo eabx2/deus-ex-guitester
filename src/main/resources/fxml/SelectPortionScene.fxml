@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.layout.*?>
+<?import java.lang.*?>
+<?import javafx.scene.shape.*?>
+
+<Pane fx:id="drawPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" onContextMenuRequested="#onDrawPaneContextMenuRequested" onDragDetected="#onDrawPaneMouseDragDetected" onMouseDragged="#onDrawPaneMouseDragged" opacity="0.3" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.me.deusexguitester.controller.SelectPortionController">
+   <children>
+      <Rectangle fx:id="selectAreaRectangle" arcHeight="5.0" arcWidth="5.0" fill="TRANSPARENT" stroke="BLACK" strokeWidth="2.0" />
+   </children>
+</Pane>

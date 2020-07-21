@@ -25,6 +25,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.*;
+import javafx.scene.paint.Color;
 import javafx.stage.*;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
@@ -54,7 +56,9 @@ public class MainSceneController implements Initializable{
     private int numberOfScreenShots = 0;
 
     private SimpleBooleanProperty recording = new SimpleBooleanProperty(false);
-    private SimpleBooleanProperty playbacking= new SimpleBooleanProperty(false);
+    private SimpleBooleanProperty playbacking = new SimpleBooleanProperty(false);
+    private SimpleBooleanProperty paused = new SimpleBooleanProperty(false);
+    private SimpleBooleanProperty selectingPortion  = new SimpleBooleanProperty(false);
 
     public static Pane mainPaneInstance;
 
@@ -168,7 +172,7 @@ public class MainSceneController implements Initializable{
 
         if(pauseButton.getText().equals("Pause")){
             pauseButton.setText("Resume");
-
+            paused.setValue(true);
             System.out.println("\tPaused");
 
             // unhook the screen
@@ -181,8 +185,8 @@ public class MainSceneController implements Initializable{
         }
         else if(pauseButton.getText().equals("Resume")){
             pauseButton.setText("Pause");
-
-            System.out.println("\tResuming " + newTest.testInfo.name);
+            paused.setValue(false);
+            System.out.println("\tResuming");
 
             // hook the screen
             try {
@@ -319,18 +323,31 @@ public class MainSceneController implements Initializable{
 
     public void onVerifyPortionButtonClick(ActionEvent event) {
 
-        // first press
-        int x1 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-4).x);
-        int y1 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-4).y);
-
-        // second press
-        int x2 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-2).x);
-        int y2 = Integer.parseInt(newTest.commands.get(newTest.commands.size()-2).y);
-
-        // remove last four commands - press,release,press,release -
-        for (int i = 0; i < 4; i++) {
-            newTest.commands.remove(newTest.commands.size()-1);
+        // unhook
+        try {
+            GlobalScreen.unregisterNativeHook();
+        } catch (NativeHookException e) {
+            e.printStackTrace();
         }
+
+        // get the area
+        displaySelectPortionScene();
+
+        // hook again
+        try {
+            GlobalScreen.registerNativeHook();
+        } catch (NativeHookException e) {
+            e.printStackTrace();
+        }
+
+        // if no rectangle is specified return
+        if(SelectPortionController.selectedAreaRectangle == null) return;
+
+        int x1 = (int) SelectPortionController.selectedAreaRectangle.getX();
+        int y1 = (int) SelectPortionController.selectedAreaRectangle.getY();
+
+        int x2 = (int) (SelectPortionController.selectedAreaRectangle.getX() + SelectPortionController.selectedAreaRectangle.getWidth());
+        int y2 = (int) (SelectPortionController.selectedAreaRectangle.getY() + SelectPortionController.selectedAreaRectangle.getHeight());
 
         // create rect with two points
         Rectangle rect = new Rectangle(new Point(x1,y1));
@@ -365,7 +382,7 @@ public class MainSceneController implements Initializable{
         playbacking.setValue(true);
 
         testsTableView.getSelectionModel().getSelectedItems().forEach((o -> {
-            System.out.println("Testing " + ((TestInfoProperty) o).getName() + "\n");
+            System.out.println("Testing " + ((TestInfoProperty) o).getName());
             Tester.getTester().perform(Test.loadTest(((TestInfoProperty) o).getName()));
             System.out.println("Testing Ended " + ((TestInfoProperty) o).getName() + "\n");
         }));
@@ -395,6 +412,38 @@ public class MainSceneController implements Initializable{
     }
 
     // External functions
+
+    public void displaySelectPortionScene(){
+
+        selectingPortion.setValue(true);
+
+        Stage window = new Stage();
+        window.initStyle(StageStyle.TRANSPARENT); // hide the top bar
+        window.initModality(Modality.APPLICATION_MODAL);
+
+        Parent root = null;
+        try {
+            root = FXMLLoader.load(getClass().getResource("/fxml/SelectPortionScene.fxml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        window.setX(Tester.getRectangleOfWindowByTitle(newTest.testInfo.testedWindow).getX());
+        window.setY(Tester.getRectangleOfWindowByTitle(newTest.testInfo.testedWindow).getY());
+        window.setWidth(Tester.getRectangleOfWindowByTitle(newTest.testInfo.testedWindow).getWidth());
+        window.setHeight(Tester.getRectangleOfWindowByTitle(newTest.testInfo.testedWindow).getHeight());
+
+        Scene scene = new Scene(root);
+        scene.setFill(Color.TRANSPARENT); // frame color
+
+        window.setScene(scene);
+        window.initStyle(StageStyle.TRANSPARENT);  // make it transparent
+
+        window.setResizable(false);
+        window.showAndWait();
+
+        selectingPortion.setValue(false);
+    }
 
     public void displayNewTestScene(){
         Stage window = new Stage();
@@ -429,10 +478,10 @@ public class MainSceneController implements Initializable{
         pauseButton.disableProperty().bind(recording.not().or(playbacking));
         abortButton.disableProperty().bind(recording.not().or(playbacking));
 
-        verifyScreenButton.disableProperty().bind(recording.not().or(playbacking));
-        verifyValueButton.disableProperty().bind(recording.not().or(playbacking));
-        waitButton.disableProperty().bind(recording.not().or(playbacking));
-        verifyPortionButton.disableProperty().bind(recording.not().or(playbacking));
+        verifyScreenButton.disableProperty().bind(recording.not().or(playbacking).or(paused).or(selectingPortion));
+        verifyValueButton.disableProperty().bind(recording.not().or(playbacking).or(paused).or(selectingPortion));
+        waitButton.disableProperty().bind(recording.not().or(playbacking).or(paused).or(selectingPortion));
+        verifyPortionButton.disableProperty().bind(recording.not().or(playbacking).or(paused).or(selectingPortion));
 
         playbackButton.disableProperty().bind(playbacking.or(recording));
 
