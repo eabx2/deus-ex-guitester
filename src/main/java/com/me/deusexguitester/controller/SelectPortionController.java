@@ -10,6 +10,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
+import java.awt.*;
+import java.awt.geom.Point2D;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -26,6 +28,8 @@ public class SelectPortionController implements Initializable {
     @FXML
     Rectangle selectAreaRectangle;
 
+    private Point2D pressedPoint;
+
     ContextMenu contextMenu;
 
     public void onDrawPaneMouseDragDetected(MouseEvent event) {
@@ -34,16 +38,17 @@ public class SelectPortionController implements Initializable {
         selectAreaRectangle.setWidth(0);
         selectAreaRectangle.setHeight(0);
 
-        // place the rectangle
-        selectAreaRectangle.setX(event.getX());
-        selectAreaRectangle.setY(event.getY());
+        pressedPoint.setLocation(event.getX(), event.getY());
 
     }
 
     public void onDrawPaneMouseDragged(MouseEvent event) {
 
-        selectAreaRectangle.setWidth(event.getX() - selectAreaRectangle.getX());
-        selectAreaRectangle.setHeight(event.getY() - selectAreaRectangle.getY());
+        selectAreaRectangle.setX(pressedPoint.getX() < event.getX() ? pressedPoint.getX() : event.getX());
+        selectAreaRectangle.setY(pressedPoint.getY() < event.getY() ? pressedPoint.getY() : event.getY());
+
+        selectAreaRectangle.setWidth(Math.abs(event.getX() - pressedPoint.getX()));
+        selectAreaRectangle.setHeight(Math.abs(event.getY() - pressedPoint.getY()));
 
     }
 
@@ -58,6 +63,8 @@ public class SelectPortionController implements Initializable {
 
         // reset every time this controller called
         selectedAreaRectangle = null;
+
+        pressedPoint = new Point2D.Double();
 
         contextMenu = new ContextMenu();
 
