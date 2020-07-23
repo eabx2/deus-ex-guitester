@@ -1,15 +1,13 @@
 package com.me.deusexguitester.tester;
 
 import com.me.deusexguitester.controller.MainSceneController;
-import com.me.deusexguitester.fileManager.FileManager;
 import com.me.deusexguitester.model.Command;
+import com.me.deusexguitester.model.Report;
 import com.me.deusexguitester.model.Test;
 import com.sun.jna.platform.DesktopWindow;
 import com.sun.jna.platform.WindowUtils;
 import javafx.geometry.Bounds;
 
-import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -17,9 +15,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 
 /**
@@ -31,15 +27,17 @@ public class Tester {
 
     private Robot robot;
 
-    public boolean perform(Test test){
+    public Report perform(Test test){
 
         Rectangle windowRect = getRectangleOfWindowByTitle(test.testInfo.testedWindow);
 
         // if specified window is not found
         if(windowRect == null){
             System.out.println("\tSpecified window is not found");
-            return false;
+            return null;
         }
+
+        Report report = new Report();
 
         ArrayList<Command> commands = test.commands;
 
@@ -48,17 +46,35 @@ public class Tester {
         commands.forEach(command -> {
 
             switch (command.action){
+
+                case "mouseClicked":
+
+                    robot.mouseMove(finalWindowRect.x + command.mouseActionX,finalWindowRect.y + command.mouseActionY);
+                    robotMouseClick(command.mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+
+                    break;
+
+                case "mouseDoubleClicked":
+
+                    robot.mouseMove(finalWindowRect.x + command.mouseActionX,finalWindowRect.y + command.mouseActionY);
+                    robotMouseDoubleClick(command.mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+
+                    break;
+
                 case "mousePressed":
 
-                    robot.mouseMove(finalWindowRect.x + Integer.parseInt(command.x),finalWindowRect.y + Integer.parseInt(command.y));
-                    robot.mousePress(InputEvent.getMaskForButton(Integer.parseInt(command.buttonNumber)));
+                    // somehow java robot sees button3 as right click
+                    robot.mouseMove(finalWindowRect.x + command.mouseActionX,finalWindowRect.y + command.mouseActionY);
+                    robot.mousePress(command.mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
 
                     break;
 
                 case "mouseReleased":
 
-                    robot.mouseMove(finalWindowRect.x + Integer.parseInt(command.x),finalWindowRect.y + Integer.parseInt(command.y));
-                    robot.mouseRelease(InputEvent.getMaskForButton(Integer.parseInt(command.buttonNumber)));
+                    // somehow java robot sees button3 as right click
+                    // move smoothly on release action in case if it is a drag-drop
+                    robotMoveMouseSmoothly(MouseInfo.getPointerInfo().getLocation().x, MouseInfo.getPointerInfo().getLocation().y, finalWindowRect.x + command.mouseActionX,finalWindowRect.y + command.mouseActionY);
+                    robot.mouseRelease(command.mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
 
                     break;
 
@@ -84,21 +100,23 @@ public class Tester {
 
                 case "verifyValue":
 
-                    // copy selected text
-                    robot.setAutoDelay(50);
-                    robot.keyPress(KeyEvent.VK_CONTROL);
-                    robot.keyPress(KeyEvent.VK_C);
-                    robot.keyRelease(KeyEvent.VK_CONTROL);
-                    robot.keyRelease(KeyEvent.VK_C);
+                    Tester.getRobot().keyPress(KeyEvent.VK_CONTROL);
+                    Tester.getRobot().keyPress(KeyEvent.VK_C);
+                    Tester.getRobot().keyRelease(KeyEvent.VK_CONTROL);
+                    Tester.getRobot().keyRelease(KeyEvent.VK_C);
 
                     // get the selected text from clipboard
                     String copiedText = getClipboardText();
 
                     // compare
-                    if(command.value.equals(copiedText))
+                    if(command.value.equals(copiedText)){
                         System.out.println("\tVerify Point " + command.verifyNumber + " is PASSED");
-                    else
+                        report.countPassedVerificationPoint++;
+                    }
+                    else{
                         System.out.println("\tVerify Point " + command.verifyNumber + " is FAILED");
+                        report.countFailedVerificationPoint++;
+                    }
 
                     break;
 
@@ -113,7 +131,7 @@ public class Tester {
                     // focus to applet
                     robot.mouseMove(x,y);
                     robot.mousePress(InputEvent.getMaskForButton(1));
-                    Tester.getRobot().setAutoDelay(500);
+                    Tester.getRobot().delay(500);
                     robot.mouseRelease(InputEvent.getMaskForButton(1));
                     //Tester.getRobot().setAutoDelay(2000);
 
@@ -124,10 +142,14 @@ public class Tester {
                     BufferedImage testScreenshot = test.getScreenshotByName(command.screenshotName);
 
                     // compare
-                    if(compareImages(currentScreenshot,testScreenshot))
+                    if(compareImages(currentScreenshot,testScreenshot)) {
                         System.out.println("\tVerify Point " + command.verifyNumber + " is PASSED");
-                    else
+                        report.countPassedVerificationPoint++;
+                    }
+                    else{
                         System.out.println("\tVerify Point " + command.verifyNumber + " is FAILED");
+                        report.countFailedVerificationPoint++;
+                    }
 
                     break;
 
@@ -152,7 +174,7 @@ public class Tester {
                     // focus to applet
                     robot.mouseMove(x,y);
                     robot.mousePress(InputEvent.getMaskForButton(1));
-                    Tester.getRobot().setAutoDelay(500);
+                    Tester.getRobot().delay(500);
                     robot.mouseRelease(InputEvent.getMaskForButton(1));
 
                     // create rect with two points
@@ -169,19 +191,23 @@ public class Tester {
                     BufferedImage testPortion = test.getScreenshotByName(command.screenshotName);
 
                     // compare
-                    if(compareImages(currentPortion,testPortion))
+                    if(compareImages(currentPortion,testPortion)){
                         System.out.println("\tVerify Point " + command.verifyNumber + " is PASSED");
-                    else
+                        report.countPassedVerificationPoint++;
+                    }
+                    else{
                         System.out.println("\tVerify Point " + command.verifyNumber + " is FAILED");
+                        report.countFailedVerificationPoint++;
+                    }
 
                     break;
             }
 
-            tester.robot.setAutoDelay(500);
+            robot.delay(1000);
 
         });
 
-        return true;
+        return report;
     }
 
 
@@ -221,18 +247,63 @@ public class Tester {
         return rect;
     }
 
-    private static String getClipboardText(){
+    public static String getClipboardText(){
 
         String copiedText = null;
 
-        try {
-            Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            copiedText = systemClipboard.getData(DataFlavor.stringFlavor).toString();
-        } catch (UnsupportedFlavorException | IOException e) {
-            e.printStackTrace();
+        // throw exception when another process updates clipboard - attempt to get clipboard -
+        while (true){
+
+            try {
+                Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                copiedText = systemClipboard.getData(DataFlavor.stringFlavor).toString();
+                return copiedText;
+            } catch (UnsupportedFlavorException | IOException e) {
+                System.out.println("error in clipboard");
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e1) {
+                }
+            }
+
         }
 
-        return copiedText;
+    }
+
+    public static void robotMoveMouseSmoothly(int currentX, int currentY, int destinationX, int destinationY){
+
+        double dx = (destinationX - currentX) / (double) Math.abs(destinationX - currentX);
+        double dy = (destinationY - currentY) / (double) Math.abs(destinationX - currentX);
+
+        double x = currentX;
+        double y = currentY;
+
+        for(int i= 0; i < Math.abs((destinationX - currentX)); i++){
+
+            x = x + dx;
+            y = y + dy;
+            Tester.getRobot().mouseMove((int) x, (int) y);
+            Tester.getRobot().delay(5);
+
+        }
+
+    }
+
+    public static void robotMouseClick(int buttonNumberMask){
+        Tester.getRobot().setAutoDelay(100);
+
+        Tester.getRobot().mousePress(buttonNumberMask);
+        Tester.getRobot().mouseRelease(buttonNumberMask);
+    }
+
+    public static void robotMouseDoubleClick(int buttonNumberMask){
+        Tester.getRobot().setAutoDelay(100);
+
+        Tester.getRobot().mousePress(buttonNumberMask);
+        Tester.getRobot().mouseRelease(buttonNumberMask);
+
+        Tester.getRobot().mousePress(buttonNumberMask);
+        Tester.getRobot().mouseRelease(buttonNumberMask);
     }
 
     public static Robot getRobot(){

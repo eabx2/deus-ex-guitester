@@ -1,7 +1,5 @@
 package com.me.deusexguitester.controller;
 
-import static com.me.deusexguitester.fileManager.FileManager.getFileManager;
-
 import com.me.deusexguitester.fileManager.FileManager;
 import com.me.deusexguitester.listener.KeyActivityListener;
 import com.me.deusexguitester.listener.MouseActivityListener;
@@ -25,26 +23,18 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.*;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
 /**
  * Created by ersinn on 13.07.2020.
@@ -258,18 +248,36 @@ public class MainSceneController implements Initializable{
             e.printStackTrace();
         }
 
-        // repeat the last press-release action pair
-        Command temp[] = new Command[]{newTest.commands.get(newTest.commands.size()-2),newTest.commands.get(newTest.commands.size()-1)};
+        Rectangle rect = null;
+
+        for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
+            if(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)).equals(MainSceneController.newTest.testInfo.testedWindow)){
+                rect = desktopWindow.getLocAndSize();
+                break;
+            }
+        }
 
         // copy where the mouse is - on verify button -
-        double x = MouseInfo.getPointerInfo().getLocation().getX();
-        double y = MouseInfo.getPointerInfo().getLocation().getY();
+        double oldX = MouseInfo.getPointerInfo().getLocation().getX();
+        double oldY = MouseInfo.getPointerInfo().getLocation().getY();
+
+        if(newTest.commands.get(newTest.commands.size()-1).action == "mouseDoubleClicked"){
+            Tester.getRobot().mouseMove(rect.x + newTest.commands.get(newTest.commands.size()-1).mouseActionX, rect.y + newTest.commands.get(newTest.commands.size()-1).mouseActionY);
+            Tester.robotMouseDoubleClick(newTest.commands.get(newTest.commands.size()-1).mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+        }
 
         // repeat the last press-release action pair
-        Tester.getRobot().mouseMove(Integer.parseInt(temp[0].x),Integer.parseInt(temp[0].y));
-        Tester.getRobot().mousePress(InputEvent.getMaskForButton(Integer.parseInt(temp[0].buttonNumber)));
-        Tester.getRobot().mouseMove(Integer.parseInt(temp[1].x),Integer.parseInt(temp[1].y));
-        Tester.getRobot().mouseRelease(InputEvent.getMaskForButton(Integer.parseInt(temp[1].buttonNumber)));
+        else {
+            Command temp[] = new Command[]{newTest.commands.get(newTest.commands.size()-2),newTest.commands.get(newTest.commands.size()-1)};
+
+            Tester.getRobot().setAutoDelay(50);
+
+            // repeat the last press-release action pair
+            Tester.getRobot().mouseMove(rect.x + temp[0].mouseActionX,rect.y + temp[0].mouseActionY);
+            Tester.getRobot().mousePress(newTest.commands.get(newTest.commands.size()-1).mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+            Tester.getRobot().mouseMove(rect.x + temp[1].mouseActionX,rect.y + temp[1].mouseActionY);
+            Tester.getRobot().mouseRelease(newTest.commands.get(newTest.commands.size()-1).mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+        }
 
         // copy selected text
         Tester.getRobot().setAutoDelay(50);
@@ -279,16 +287,10 @@ public class MainSceneController implements Initializable{
         Tester.getRobot().keyRelease(KeyEvent.VK_C);
 
         // get the selected text from clipboard
-        String copiedText = null;
-        try {
-            Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            copiedText = systemClipboard.getData(DataFlavor.stringFlavor).toString();
-        } catch (UnsupportedFlavorException | IOException e) {
-            e.printStackTrace();
-        }
+        String copiedText = Tester.getClipboardText();
 
         // get back the mouse onto verify button
-        Tester.getRobot().mouseMove(((int) x), ((int) y));
+        Tester.getRobot().mouseMove(((int) oldX), ((int) oldY));
 
         // add verifyValue command
         Command command = new Command();
@@ -383,8 +385,8 @@ public class MainSceneController implements Initializable{
 
         testsTableView.getSelectionModel().getSelectedItems().forEach((o -> {
             System.out.println("Testing " + ((TestInfoProperty) o).getName());
-            Tester.getTester().perform(Test.loadTest(((TestInfoProperty) o).getName()));
-            System.out.println("Testing Ended " + ((TestInfoProperty) o).getName() + "\n");
+            Tester.getTester().perform(Test.loadTest(((TestInfoProperty) o).getName())).printConsole();
+            System.out.println("Done " + ((TestInfoProperty) o).getName() + "\n");
         }));
 
         playbacking.setValue(false);

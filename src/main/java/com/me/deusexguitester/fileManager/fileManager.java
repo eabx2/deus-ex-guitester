@@ -1,24 +1,13 @@
 package com.me.deusexguitester.fileManager;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.me.deusexguitester.model.Command;
-import com.me.deusexguitester.model.Test;
 import com.me.deusexguitester.model.TestInfo;
 import com.me.deusexguitester.model.TestInfoProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.function.Consumer;
 
 
 /**

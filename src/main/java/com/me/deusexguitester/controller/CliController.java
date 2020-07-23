@@ -1,10 +1,9 @@
 package com.me.deusexguitester.controller;
 
-import java.util.Scanner;
-
 /**
  * Created by ersinn on 16.07.2020.
  */
+
 public class CliController {
 
     private static CliController cli;

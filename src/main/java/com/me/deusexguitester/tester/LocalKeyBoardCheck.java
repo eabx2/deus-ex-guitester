@@ -1,14 +1,9 @@
 package com.me.deusexguitester.tester;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
 
 /**
  * Created by ersinn on 16.07.2020.

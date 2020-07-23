@@ -10,7 +10,6 @@ import javafx.stage.Stage;
 import org.jnativehook.GlobalScreen;
 
 import java.awt.*;
-import java.io.Console;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.logging.Level;

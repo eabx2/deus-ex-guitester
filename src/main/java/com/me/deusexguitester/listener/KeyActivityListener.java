@@ -2,13 +2,9 @@ package com.me.deusexguitester.listener;
 
 import com.me.deusexguitester.controller.MainSceneController;
 import com.me.deusexguitester.model.Command;
-import com.me.deusexguitester.model.Test;
 import com.me.deusexguitester.tester.LocalKeyBoardCheck;
-import com.me.deusexguitester.tester.Tester;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
-
-import java.util.ArrayList;
 
 /**
  * Created by ersinn on 13.07.2020.
