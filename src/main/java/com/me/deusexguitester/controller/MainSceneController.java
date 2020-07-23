@@ -3,10 +3,8 @@ package com.me.deusexguitester.controller;
 import com.me.deusexguitester.fileManager.FileManager;
 import com.me.deusexguitester.listener.KeyActivityListener;
 import com.me.deusexguitester.listener.MouseActivityListener;
-import com.me.deusexguitester.model.Command;
-import com.me.deusexguitester.model.Test;
-import com.me.deusexguitester.model.TestInfo;
-import com.me.deusexguitester.model.TestInfoProperty;
+import com.me.deusexguitester.listener.MouseWheelActivityListener;
+import com.me.deusexguitester.model.*;
 import com.me.deusexguitester.tester.Tester;
 import com.sun.jna.platform.DesktopWindow;
 import com.sun.jna.platform.WindowUtils;
@@ -21,7 +19,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
@@ -35,6 +35,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 /**
  * Created by ersinn on 13.07.2020.
@@ -64,7 +65,7 @@ public class MainSceneController implements Initializable{
     Button pauseButton;
 
     @FXML
-    Button stopButton;
+    Button saveButton;
 
     @FXML
     Button playbackButton;
@@ -106,6 +107,8 @@ public class MainSceneController implements Initializable{
     @FXML
     Button refreshButton;
 
+    ContextMenu testsTableViewContextMenu;
+
     // Button Functions
 
     public void onRecordButtonClick(ActionEvent event){
@@ -129,7 +132,7 @@ public class MainSceneController implements Initializable{
 
     }
 
-    public void onStopButtonClick(ActionEvent event) {
+    public void onSaveButtonClick(ActionEvent event) {
 
         recording.setValue(false);
         pauseButton.setText("Pause");
@@ -202,7 +205,7 @@ public class MainSceneController implements Initializable{
         }
 
         // delete test dir
-        newTest.deleteDir();
+        newTest.delete();
 
         System.out.println("Aborted " + newTest.testInfo.name + "\n");
 
@@ -384,9 +387,11 @@ public class MainSceneController implements Initializable{
         playbacking.setValue(true);
 
         testsTableView.getSelectionModel().getSelectedItems().forEach((o -> {
-            System.out.println("Testing " + ((TestInfoProperty) o).getName());
-            Tester.getTester().perform(Test.loadTest(((TestInfoProperty) o).getName())).printConsole();
-            System.out.println("Done " + ((TestInfoProperty) o).getName() + "\n");
+            System.out.println("\nTesting " + ((TestInfoProperty) o).getName());
+            Test test = Test.loadTest(((TestInfoProperty) o).getName());
+            Report report = Tester.getTester().perform(test);
+            System.out.println("Done " + ((TestInfoProperty) o).getName());
+            report.printConsole();
         }));
 
         playbacking.setValue(false);
@@ -411,6 +416,10 @@ public class MainSceneController implements Initializable{
         // reset selectAllCheckBox
         selectAllCheckBox.setSelected(false);
 
+    }
+
+    public void onTestsTableViewContextMenuRequested(ContextMenuEvent contextMenuEvent) {
+        testsTableViewContextMenu.show(testsTableView,contextMenuEvent.getScreenX(),contextMenuEvent.getScreenY());
     }
 
     // External functions
@@ -476,7 +485,7 @@ public class MainSceneController implements Initializable{
 
         // disable property
         recordButton.disableProperty().bind(recording.or(playbacking));
-        stopButton.disableProperty().bind(recording.not().or(playbacking));
+        saveButton.disableProperty().bind(recording.not().or(playbacking));
         pauseButton.disableProperty().bind(recording.not().or(playbacking));
         abortButton.disableProperty().bind(recording.not().or(playbacking));
 
@@ -492,10 +501,26 @@ public class MainSceneController implements Initializable{
 
         testsTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
+        testsTableViewContextMenu = new ContextMenu();
+
+        MenuItem deleteMenuItem = new MenuItem("Delete");
+        deleteMenuItem.setDisable(true); // initially disabled
+
+        deleteMenuItem.setOnAction(event -> {
+            testsTableView.getSelectionModel().getSelectedItems().forEach(o -> {
+                FileManager.getFileManager().deleteTestDirectory(((TestInfoProperty) o).getName());
+            });
+            onRefreshButtonClick(new ActionEvent());
+        });
+
+        testsTableViewContextMenu.getItems().add(deleteMenuItem);
 
         // bind list-view and checkbox
         testsTableView.getSelectionModel().getSelectedItems().addListener((ListChangeListener) c -> {
-            if(c.getList().size() == testsTableView.getItems().size()) selectAllCheckBox.setSelected(true);
+            if(c.getList().size() == 0) deleteMenuItem.setDisable(true);
+            else deleteMenuItem.setDisable(false);
+
+            if(c.getList().size() ==  testsTableView.getItems().size()) selectAllCheckBox.setSelected(true);
             else selectAllCheckBox.setSelected(false);
         });
 
@@ -511,6 +536,7 @@ public class MainSceneController implements Initializable{
 
         // Add listeners
         GlobalScreen.addNativeMouseListener(new MouseActivityListener());
+        GlobalScreen.addNativeMouseWheelListener(new MouseWheelActivityListener());
         GlobalScreen.addNativeKeyListener(new KeyActivityListener());
 
         // let it refer to mainPane

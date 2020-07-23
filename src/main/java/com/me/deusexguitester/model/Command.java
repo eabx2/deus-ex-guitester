@@ -11,6 +11,7 @@ public class Command {
     public int mouseButtonNumber;
     public int mouseActionX;
     public int mouseActionY;
+    public int wheelRotation;
 
     // key actions;
     public int rawCode;

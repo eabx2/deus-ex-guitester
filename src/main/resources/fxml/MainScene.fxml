@@ -13,7 +13,7 @@
       <Button fx:id="playbackButton" layoutX="425.0" layoutY="11.0" mnemonicParsing="false" onAction="#onPlaybackButtonClick" prefHeight="36.0" prefWidth="80.0" text="Playback" />
       <CheckBox fx:id="selectAllCheckBox" layoutX="425.0" layoutY="60.0" mnemonicParsing="false" onAction="#onSelectAllCheckBoxClick" text="Select All" />
       <Button fx:id="pauseButton" layoutX="14.0" layoutY="54.0" mnemonicParsing="false" onAction="#onPauseButtonClick" prefHeight="29.0" prefWidth="69.0" text="Pause" />
-      <Button fx:id="stopButton" layoutX="90.0" layoutY="14.0" mnemonicParsing="false" onAction="#onStopButtonClick" prefHeight="29.0" prefWidth="69.0" text="Stop" />
+      <Button fx:id="saveButton" layoutX="90.0" layoutY="14.0" mnemonicParsing="false" onAction="#onSaveButtonClick" prefHeight="29.0" prefWidth="69.0" text="Save" />
       <Separator layoutX="172.0" layoutY="16.0" orientation="VERTICAL" prefHeight="67.0" prefWidth="4.0" />
       <Button fx:id="abortButton" layoutX="90.0" layoutY="54.0" mnemonicParsing="false" onAction="#onAbortButtonClick" prefHeight="29.0" prefWidth="69.0" text="Abort" />
       <Separator layoutX="399.0" layoutY="16.0" orientation="VERTICAL" prefHeight="67.0" prefWidth="4.0" />
@@ -22,7 +22,7 @@
       <Button fx:id="verifyValueButton" layoutX="286.0" layoutY="14.0" mnemonicParsing="false" onAction="#onVerifyValueButtonClick" prefHeight="29.0" prefWidth="95.0" text="Verify Value" />
       <Button fx:id="verifyScreenButton" layoutX="193.0" layoutY="14.0" mnemonicParsing="false" onAction="#onVerifyScreenButtonClick" prefHeight="29.0" prefWidth="87.0" text="Verify Screen" />
       <Button fx:id="verifyPortionButton" layoutX="286.0" layoutY="56.0" mnemonicParsing="false" onAction="#onVerifyPortionButtonClick" prefHeight="29.0" prefWidth="95.0" text="Verify Portion" />
-      <TableView fx:id="testsTableView" layoutX="13.0" layoutY="101.0" prefHeight="254.0" prefWidth="498.0">
+      <TableView fx:id="testsTableView" layoutX="13.0" layoutY="101.0" onContextMenuRequested="#onTestsTableViewContextMenuRequested" prefHeight="254.0" prefWidth="498.0">
         <columns>
           <TableColumn fx:id="testNameTableColumn" prefWidth="105.0" resizable="false" text="Test Name" />
           <TableColumn fx:id="windowNameTableColumn" prefWidth="140.0" resizable="false" text="Window Name" />

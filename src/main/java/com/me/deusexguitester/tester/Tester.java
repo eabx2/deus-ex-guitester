@@ -37,7 +37,7 @@ public class Tester {
             return null;
         }
 
-        Report report = new Report();
+        Report report = new Report(test.testInfo.name);
 
         ArrayList<Command> commands = test.commands;
 
@@ -75,6 +75,13 @@ public class Tester {
                     // move smoothly on release action in case if it is a drag-drop
                     robotMoveMouseSmoothly(MouseInfo.getPointerInfo().getLocation().x, MouseInfo.getPointerInfo().getLocation().y, finalWindowRect.x + command.mouseActionX,finalWindowRect.y + command.mouseActionY);
                     robot.mouseRelease(command.mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+
+                    break;
+
+                case "mouseWheelMoved":
+
+                    robot.mouseMove(finalWindowRect.x + command.mouseActionX,finalWindowRect.y + command.mouseActionY);
+                    robot.mouseWheel(command.wheelRotation);
 
                     break;
 

@@ -4,8 +4,10 @@ import com.me.deusexguitester.controller.MainSceneController;
 import com.me.deusexguitester.model.Command;
 import com.sun.jna.platform.DesktopWindow;
 import com.sun.jna.platform.WindowUtils;
+import com.sun.jna.platform.win32.Win32Exception;
 import org.jnativehook.mouse.NativeMouseEvent;
 import org.jnativehook.mouse.NativeMouseInputListener;
+import org.jnativehook.mouse.NativeMouseMotionListener;
 
 import java.awt.*;
 
@@ -16,19 +18,21 @@ public class MouseActivityListener implements NativeMouseInputListener{
 
     public static long lastMousePressedTime;
 
-    public static boolean isMousePressed = false;
-
     @Override
     public void nativeMouseClicked(NativeMouseEvent e) {
 
         Rectangle rect = null;
 
-        for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
-            if(MainSceneController.newTest == null) return;
-            if(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)).equals(MainSceneController.newTest.testInfo.testedWindow)){
-                rect = desktopWindow.getLocAndSize();
-                break;
+        try {
+            for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
+                if(MainSceneController.newTest == null) return;
+                if(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)).equals(MainSceneController.newTest.testInfo.testedWindow)){
+                    rect = desktopWindow.getLocAndSize();
+                    break;
+                }
             }
+        }catch (Win32Exception win32e){
+
         }
 
         // if specified window is not found
@@ -62,11 +66,15 @@ public class MouseActivityListener implements NativeMouseInputListener{
 
         Rectangle rect = null;
 
-        for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
-            if(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)).equals(MainSceneController.newTest.testInfo.testedWindow)){
-                rect = desktopWindow.getLocAndSize();
-                break;
+        try {
+            for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
+                if(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)).equals(MainSceneController.newTest.testInfo.testedWindow)){
+                    rect = desktopWindow.getLocAndSize();
+                    break;
+                }
             }
+        } catch (Win32Exception win32e){
+            return;
         }
 
         // if specified window is not found
@@ -87,8 +95,6 @@ public class MouseActivityListener implements NativeMouseInputListener{
 
         MainSceneController.newTest.commands.add(command);
 
-        isMousePressed = true;
-
     }
 
     @Override
@@ -96,12 +102,16 @@ public class MouseActivityListener implements NativeMouseInputListener{
 
         Rectangle rect = null;
 
-        for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
-            if(MainSceneController.newTest == null) return;
-            if(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)).equals(MainSceneController.newTest.testInfo.testedWindow)){
-                rect = desktopWindow.getLocAndSize();
-                break;
+        try {
+            for (DesktopWindow desktopWindow : WindowUtils.getAllWindows(true)){
+                if(MainSceneController.newTest == null) return;
+                if(desktopWindow.getTitle().substring(0,Math.min(desktopWindow.getTitle().length(),25)).equals(MainSceneController.newTest.testInfo.testedWindow)){
+                    rect = desktopWindow.getLocAndSize();
+                    break;
+                }
             }
+        }catch (Win32Exception win32e){
+
         }
 
         // if specified window is not found
@@ -120,17 +130,16 @@ public class MouseActivityListener implements NativeMouseInputListener{
 
         MainSceneController.newTest.commands.add(command);
 
-        isMousePressed = false;
+    }
+
+    @Override
+    public void nativeMouseMoved(NativeMouseEvent e) {
 
     }
 
     @Override
-    public void nativeMouseMoved(NativeMouseEvent nativeMouseEvent) {
+    public void nativeMouseDragged(NativeMouseEvent e) {
 
     }
 
-    @Override
-    public void nativeMouseDragged(NativeMouseEvent nativeMouseEvent) {
-
-    }
 }

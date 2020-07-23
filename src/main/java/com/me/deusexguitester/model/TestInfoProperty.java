@@ -33,7 +33,6 @@ public class TestInfoProperty {
         return testedWindow;
     }
 
-
     public String getDescription() {
         return description.get();
     }

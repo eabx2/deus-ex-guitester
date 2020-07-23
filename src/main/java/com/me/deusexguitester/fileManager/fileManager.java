@@ -5,6 +5,7 @@ import com.me.deusexguitester.model.TestInfo;
 import com.me.deusexguitester.model.TestInfoProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,14 @@ public class FileManager {
 
         return testInfoPropertyList;
 
+    }
+
+    public void deleteTestDirectory(String testName){
+        try {
+            FileUtils.deleteDirectory(new File(workspace.getPath() + "\\" + testName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static FileManager getFileManager(){

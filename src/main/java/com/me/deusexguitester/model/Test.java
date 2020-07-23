@@ -52,7 +52,7 @@ public class Test {
 
     }
 
-    public void deleteDir(){
+    public void delete(){
         try {
             FileUtils.deleteDirectory(new File(workspace.getPath() + "\\" + testInfo.name));
         } catch (IOException e) {
