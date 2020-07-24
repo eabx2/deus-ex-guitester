@@ -50,7 +50,7 @@ public class Tester {
                 case "mouseClicked":
 
                     robot.mouseMove(finalWindowRect.x + command.mouseActionX,finalWindowRect.y + command.mouseActionY);
-                    robotMouseClick(command.mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK);
+                    robotMouseClick(command.mouseButtonNumber == 1 ? InputEvent.BUTTON1_DOWN_MASK : InputEvent.BUTTON3_DOWN_MASK, command.pressedTime);
 
                     break;
 
@@ -210,7 +210,7 @@ public class Tester {
                     break;
             }
 
-            robot.delay(1000);
+            robot.delay(1500);
 
         });
 
@@ -296,10 +296,10 @@ public class Tester {
 
     }
 
-    public static void robotMouseClick(int buttonNumberMask){
-        Tester.getRobot().setAutoDelay(100);
+    public static void robotMouseClick(int buttonNumberMask, long pressedTime){
 
         Tester.getRobot().mousePress(buttonNumberMask);
+        Tester.getRobot().delay((int)pressedTime);
         Tester.getRobot().mouseRelease(buttonNumberMask);
     }
 

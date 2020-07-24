@@ -13,6 +13,8 @@ public class Command {
     public int mouseActionY;
     public int wheelRotation;
 
+    public long pressedTime;
+
     // key actions;
     public int rawCode;
 

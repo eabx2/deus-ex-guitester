@@ -54,6 +54,7 @@ public class MouseActivityListener implements NativeMouseInputListener{
         Command command = new Command();
         command.action = e.getClickCount() % 2 == 0 ? "mouseDoubleClicked" : "mouseClicked";
         command.mouseButtonNumber = e.getButton();
+        command.pressedTime = e.getWhen() - lastMousePressedTime;
         command.mouseActionX = (int)(e.getX() - rect.getX()); // relative coordinates
         command.mouseActionY = (int)(e.getY() - rect.getY());
 
